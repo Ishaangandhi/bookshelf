@@ -64,9 +64,9 @@ func cleanGoodreads(r *GoodreadsResponse) {
 	for index, review := range r.Reviews {
 	    // index is the index where we are
 	    // element is the element from someSlice for where we are
-			if (len(review.Book.Description) >= 200) {
+			if (len(review.Book.Description) >= 500) {
 				r.Reviews[index].Book.Description =
-					review.Book.Description[:200] + "</b>..."
+					review.Book.Description[:500] + "</b></i>..."
 			}
 				r.Reviews[index].Date = review.Date[:10] + review.Date[len(review.Date)-5:]
 
