@@ -9,11 +9,15 @@ import (
 	"os"
 	"text/template"
 	"encoding/json"
+	"sync"
 )
+
+var goodreadsResponse GoodreadsResponse
 
 type GoodreadsResponse struct {
     XMLName xml.Name `xml:"GoodreadsResponse"`
     Reviews []Review `xml:"reviews>review"`
+		mux sync.Mutex
 }
 
 type Review struct {
@@ -50,7 +54,14 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	MakeRequest(w)
+	goodreadsResponse.mux.Lock()
+	tmpl.Execute(w, goodreadsResponse.Reviews)
+	goodreadsResponse.mux.Unlock()
+	go MakeRequest(w)
+}
+
+func gohandle(w http.ResponseWriter) {
+
 }
 
 func min(x, y int) int {
@@ -86,6 +97,7 @@ func LoadConfiguration(file string) APIKey {
 }
 
 func MakeRequest(w http.ResponseWriter) {
+
 	var key APIKey = LoadConfiguration("api-key.json")
 	var goodreads_url string = fmt.Sprintf("https://www.goodreads.com/review/list?key=%s&v=2&id=%s?&per_page=200", key.Key, key.ID)
 	resp, err := http.Get(goodreads_url)
@@ -98,8 +110,8 @@ func MakeRequest(w http.ResponseWriter) {
 		log.Fatalln(err)
 	}
 
-	var goodreadsResponse GoodreadsResponse
-
+	goodreadsResponse.mux.Lock()
+	goodreadsResponse.Reviews = nil
 	err = xml.Unmarshal(body, &goodreadsResponse)
 	if err != nil {
 			fmt.Println("Fatal error ", err.Error())
@@ -107,8 +119,7 @@ func MakeRequest(w http.ResponseWriter) {
 	}
 
 	cleanGoodreads(&goodreadsResponse);
-
-	tmpl.Execute(w, goodreadsResponse.Reviews)
+	goodreadsResponse.mux.Unlock()
 }
 
 
