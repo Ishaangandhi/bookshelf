@@ -60,10 +60,6 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	go MakeRequest(w)
 }
 
-func gohandle(w http.ResponseWriter) {
-
-}
-
 func min(x, y int) int {
     if x < y {
         return x
